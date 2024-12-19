@@ -17,6 +17,11 @@ webPush.setVapidDetails(
     vapidKeys.privateKey
 );
 
+// Ruta para la raíz (para evitar el error "Cannot GET /")
+app.get('/', (req, res) => {
+    res.send('¡Hola, el servidor está en funcionamiento!');
+});
+
 // Ruta para suscripciones
 app.post('/subscribe', (req, res) => {
     const subscription = req.body;
