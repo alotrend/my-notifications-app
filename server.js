@@ -5,7 +5,7 @@ const bodyParser = require('body-parser');
 const app = express();
 app.use(bodyParser.json());
 
-// Claves VAPID (asegúrate de que sean las mismas que usas en WordPress)
+// Claves VAPID (reemplaza con tus propias claves)
 const vapidKeys = {
     publicKey: 'BEn1sa8BgFSgb37-tRj4HJMLN0dL-GmuG0gu2kX699I-PKRWlh6Q6Dsivvpg8VWdj0r1p_l8AZLNZFNOcCqfIl4',
     privateKey: 'Yu7-fe_3mCLAlLWz8V636vtTzLDdVJe6VQ636U21yWE'
@@ -17,50 +17,44 @@ webPush.setVapidDetails(
     vapidKeys.privateKey
 );
 
-// Ruta raíz para verificar que el servidor está corriendo
+// Ruta para la raíz (para evitar el error "Cannot GET /")
 app.get('/', (req, res) => {
-    res.send('Servidor de notificaciones funcionando correctamente.');
+    res.send('¡Hola, el servidor está en funcionamiento!');
 });
 
-// Ruta para guardar suscripciones
+// Ruta para suscripciones
 app.post('/subscribe', (req, res) => {
     const subscription = req.body;
-
-    if (!subscription || !subscription.endpoint) {
-        return res.status(400).json({ error: 'Suscripción inválida.' });
-    }
-
-    console.log('Nueva suscripción recibida:', subscription);
-
-    // Aquí puedes guardar la suscripción en tu base de datos si es necesario
-    res.status(201).json({ message: 'Suscripción guardada correctamente.' });
+    // Aquí debes guardar las suscripciones en tu base de datos
+    console.log('Nueva suscripción:', subscription);
+    res.status(201).json({});
 });
 
-// Ruta para enviar notificaciones
+// **Ruta para enviar notificaciones (ajustada)**
 app.post('/enviar-notificacion', (req, res) => {
-    const { subscription, title, message } = req.body;
+    console.log('Datos recibidos:', req.body);
 
-    if (!subscription || !title || !message) {
+    // Verificar si los datos necesarios están presentes
+    if (!req.body.subscription || !req.body.message) {
         return res.status(400).json({ error: 'Datos faltantes para enviar la notificación.' });
     }
 
+    const subscription = req.body.subscription;
     const payload = JSON.stringify({
-        title,
-        message,
-        icon: '/icon.png',
-        click_action: 'https://alotrendmarketing.com/tienda2/' // URL a redirigir
+        title: 'Notificación',
+        message: req.body.message, // Mensaje personalizado
+        icon: '/icon.png' // El icono de la notificación (puedes cambiar esto según lo necesites)
     });
 
+    // Enviar la notificación push
     webPush.sendNotification(subscription, payload)
-        .then(() => res.status(200).json({ message: 'Notificación enviada correctamente.' }))
+        .then(() => res.status(200).json({})) // Respuesta exitosa
         .catch(err => {
             console.error('Error al enviar notificación:', err);
             res.status(500).json({ error: 'Error al enviar la notificación.' });
         });
 });
 
-// Iniciar el servidor en el puerto configurado
+// Inicia el servidor en el puerto configurado
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-    console.log(`Servidor corriendo en http://localhost:${PORT}`);
-});
+app.listen(PORT, () => console.log(`Servidor corriendo en http://localhost:${PORT}`));
