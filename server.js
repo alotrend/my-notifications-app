@@ -1,3 +1,4 @@
+
 const express = require('express');
 const webPush = require('web-push');
 const bodyParser = require('body-parser');
@@ -24,14 +25,8 @@ app.get('/', (req, res) => {
 
 // Ruta para suscripciones
 app.post('/subscribe', (req, res) => {
-    const subscription = req.body.subscription;
-
-    // Asegúrate de que los datos de la suscripción son válidos
-    if (!subscription || !subscription.endpoint || !subscription.keys || !subscription.keys.p256dh || !subscription.keys.auth) {
-        return res.status(400).json({ error: 'Datos faltantes para suscripción.' });
-    }
-
-    // Aquí debes guardar la suscripción en tu base de datos
+    const subscription = req.body;
+    // Aquí debes guardar las suscripciones en tu base de datos
     console.log('Nueva suscripción:', subscription);
     res.status(201).json({});
 });
@@ -39,22 +34,32 @@ app.post('/subscribe', (req, res) => {
 // Ruta para enviar notificaciones
 app.post('/enviar-notificacion', (req, res) => {
     console.log('Datos recibidos:', req.body);
+    
+    // Verificar que los datos necesarios están presentes
     if (!req.body.subscription || !req.body.message) {
+        console.error('Error: Datos faltantes para enviar la notificación.');
         return res.status(400).json({ error: 'Datos faltantes para enviar la notificación.' });
     }
 
     const subscription = req.body.subscription;
     const payload = JSON.stringify({
         title: 'Notificación',
-        message: req.body.message, // Mensaje personalizado
+        message: req.body.message,
         icon: '/icon.png'
     });
 
+    // Enviar la notificación utilizando web-push
     webPush.sendNotification(subscription, payload)
-        .then(() => res.status(200).json({}))
+        .then(() => {
+            console.log('Notificación enviada correctamente');
+            res.status(200).json({ message: 'Notificación enviada correctamente' });
+        })
         .catch(err => {
-            console.error('Error al enviar notificación:', err);
-            res.status(500).json({ error: 'Error al enviar la notificación.' });
+            console.error('Error al enviar la notificación:', err);
+            res.status(500).json({ 
+                error: 'Error al enviar la notificación.', 
+                details: err.message || 'Error desconocido al enviar la notificación.' 
+            });
         });
 });
 
