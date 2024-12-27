@@ -41,6 +41,10 @@ app.post('/enviar-notificacion', (req, res) => {
 
     const subscription = req.body.subscription;
 
+    // Log detallado de las claves p256dh y auth
+    console.log('Clave p256dh:', subscription.keys.p256dh);
+    console.log('Clave auth:', subscription.keys.auth);
+
     // Verificar que la longitud de la clave p256dh sea correcta
     if (subscription.keys.p256dh.length !== 65) {
         return res.status(400).json({ error: 'La longitud de p256dh no es válida.' });
