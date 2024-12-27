@@ -33,23 +33,26 @@ app.post('/subscribe', (req, res) => {
 // Ruta para enviar notificaciones
 app.post('/enviar-notificacion', (req, res) => {
     console.log('Datos recibidos:', req.body);
-    
+
+    // Verificar si falta la suscripción o el mensaje
     if (!req.body.subscription || !req.body.message) {
         return res.status(400).json({ error: 'Datos faltantes para enviar la notificación.' });
     }
 
     const subscription = req.body.subscription;
+
+    // Verificar que la longitud de la clave p256dh sea correcta
+    if (subscription.keys.p256dh.length !== 65) {
+        return res.status(400).json({ error: 'La longitud de p256dh no es válida.' });
+    }
+
     const payload = JSON.stringify({
         title: 'Notificación',
         message: req.body.message, // Mensaje personalizado
         icon: '/icon.png'
     });
 
-    // Asegurarnos de que la clave p256dh tiene la longitud correcta
-    if (subscription.keys.p256dh.length !== 65) {
-        return res.status(400).json({ error: 'La longitud de p256dh no es válida.' });
-    }
-
+    // Enviar notificación
     webPush.sendNotification(subscription, payload)
         .then(() => res.status(200).json({}))
         .catch(err => {
