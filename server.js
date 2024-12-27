@@ -33,39 +33,28 @@ app.post('/subscribe', (req, res) => {
 // Ruta para enviar notificaciones
 app.post('/enviar-notificacion', (req, res) => {
     console.log('Datos recibidos:', req.body);
-
-    // Verificar que los datos necesarios están presentes
+    
     if (!req.body.subscription || !req.body.message) {
-        console.error('Error: Datos faltantes para enviar la notificación.');
         return res.status(400).json({ error: 'Datos faltantes para enviar la notificación.' });
     }
 
     const subscription = req.body.subscription;
-
-    // Verificar que la clave p256dh tenga la longitud correcta
-    if (subscription.keys.p256dh.length !== 65) {
-        console.error('Error: La longitud de p256dh no es válida.');
-        return res.status(400).json({ error: 'La longitud de p256dh no es válida.' });
-    }
-
     const payload = JSON.stringify({
         title: 'Notificación',
-        message: req.body.message,
+        message: req.body.message, // Mensaje personalizado
         icon: '/icon.png'
     });
 
-    // Enviar la notificación utilizando web-push
+    // Asegurarnos de que la clave p256dh tiene la longitud correcta
+    if (subscription.keys.p256dh.length !== 65) {
+        return res.status(400).json({ error: 'La longitud de p256dh no es válida.' });
+    }
+
     webPush.sendNotification(subscription, payload)
-        .then(() => {
-            console.log('Notificación enviada correctamente');
-            res.status(200).json({ message: 'Notificación enviada correctamente' });
-        })
+        .then(() => res.status(200).json({}))
         .catch(err => {
-            console.error('Error al enviar la notificación:', err);
-            res.status(500).json({ 
-                error: 'Error al enviar la notificación.', 
-                details: err.message || 'Error desconocido al enviar la notificación.' 
-            });
+            console.error('Error al enviar notificación:', err);
+            res.status(500).json({ error: 'Error al enviar la notificación.' });
         });
 });
 
