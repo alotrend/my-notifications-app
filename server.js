@@ -1,4 +1,3 @@
-
 const express = require('express');
 const webPush = require('web-push');
 const bodyParser = require('body-parser');
@@ -34,7 +33,7 @@ app.post('/subscribe', (req, res) => {
 // Ruta para enviar notificaciones
 app.post('/enviar-notificacion', (req, res) => {
     console.log('Datos recibidos:', req.body);
-    
+
     // Verificar que los datos necesarios están presentes
     if (!req.body.subscription || !req.body.message) {
         console.error('Error: Datos faltantes para enviar la notificación.');
@@ -42,6 +41,13 @@ app.post('/enviar-notificacion', (req, res) => {
     }
 
     const subscription = req.body.subscription;
+
+    // Verificar la longitud de la clave p256dh
+    if (subscription.keys.p256dh.length !== 65) {
+        console.error('Error: La longitud de p256dh no es válida.');
+        return res.status(400).json({ error: 'La longitud de p256dh no es válida.' });
+    }
+
     const payload = JSON.stringify({
         title: 'Notificación',
         message: req.body.message,
@@ -66,3 +72,4 @@ app.post('/enviar-notificacion', (req, res) => {
 // Inicia el servidor en el puerto configurado
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Servidor corriendo en http://localhost:${PORT}`));
+
