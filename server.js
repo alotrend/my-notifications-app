@@ -24,17 +24,21 @@ app.get('/', (req, res) => {
 
 // Ruta para suscripciones
 app.post('/subscribe', (req, res) => {
-    const subscription = req.body;
-    // Aquí debes guardar las suscripciones en tu base de datos
+    const subscription = req.body.subscription;
+
+    // Asegúrate de que los datos de la suscripción son válidos
+    if (!subscription || !subscription.endpoint || !subscription.keys || !subscription.keys.p256dh || !subscription.keys.auth) {
+        return res.status(400).json({ error: 'Datos faltantes para suscripción.' });
+    }
+
+    // Aquí debes guardar la suscripción en tu base de datos
     console.log('Nueva suscripción:', subscription);
     res.status(201).json({});
 });
 
-// **Ruta para enviar notificaciones (ajustada)**
+// Ruta para enviar notificaciones
 app.post('/enviar-notificacion', (req, res) => {
     console.log('Datos recibidos:', req.body);
-
-    // Verificar si los datos necesarios están presentes
     if (!req.body.subscription || !req.body.message) {
         return res.status(400).json({ error: 'Datos faltantes para enviar la notificación.' });
     }
@@ -43,12 +47,11 @@ app.post('/enviar-notificacion', (req, res) => {
     const payload = JSON.stringify({
         title: 'Notificación',
         message: req.body.message, // Mensaje personalizado
-        icon: '/icon.png' // El icono de la notificación (puedes cambiar esto según lo necesites)
+        icon: '/icon.png'
     });
 
-    // Enviar la notificación push
     webPush.sendNotification(subscription, payload)
-        .then(() => res.status(200).json({})) // Respuesta exitosa
+        .then(() => res.status(200).json({}))
         .catch(err => {
             console.error('Error al enviar notificación:', err);
             res.status(500).json({ error: 'Error al enviar la notificación.' });
